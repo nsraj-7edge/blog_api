@@ -1,0 +1,61 @@
+service: blog-api
+
+frameworkVersion: '3'
+provider:
+  name: aws
+  runtime: python3.8
+  region: us-east-1
+  environment:
+    DYNAMODB_TABLE: BlogPosts-${sls:stage}
+
+functions:
+  createPost:
+    handler: create_post.create_post
+    events:
+      - http:
+          path: posts
+          method: post
+
+  updatePost:
+    handler: update_post.update_post
+    events:
+      - http:
+          path: posts/{id}
+          method: put
+
+  listPosts:
+    handler: list_posts.list_posts
+    events:
+      - http:
+          path: posts
+          method: get
+
+  getPost:
+    handler: get_post.get_post
+    events:
+      - http:
+          path: posts/{id}
+          method: get
+
+  deletePost:
+    handler: delete_post.delete_post
+    events:
+      - http:
+          path: posts/{id}
+          method: delete
+
+resources:
+  Resources:
+    BlogPostsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        AttributeDefinitions:
+          - AttributeName: PostID
+            AttributeType: S
+        KeySchema:
+          - AttributeName: PostID
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
